@@ -1,13 +1,18 @@
 import type { FieldType, INodePropertyOptions, ResourceMapperField } from 'n8n-workflow';
 
+type EnumValue = string | number | boolean;
+
 type JsonSchemaProperty = {
 	type?: string | string[];
 	title?: string;
 	description?: string;
 	format?: string;
-	enum?: Array<string | number | boolean>;
+	enum?: EnumValue[];
+	oneOf?: Array<{ const?: EnumValue; title?: string }>;
 	default?: unknown;
 	items?: JsonSchemaProperty;
+	'x-lumen-order'?: number;
+	'x-lumen-enum-labels'?: Record<string, string>;
 };
 
 export type JsonSchemaObject = {
@@ -42,10 +47,26 @@ function toFieldType(property: JsonSchemaProperty): FieldType {
 	}
 }
 
+function isEnumValue(value: unknown): value is EnumValue {
+	return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+}
+
 function toOptions(property: JsonSchemaProperty): INodePropertyOptions[] | undefined {
-	const values = property.enum ?? property.items?.enum;
+	const source = property.enum || property.oneOf ? property : property.items;
+	if (!source) return undefined;
+	const labels = source['x-lumen-enum-labels'] ?? {};
+	if (source.oneOf && source.oneOf.length > 0) {
+		const options = source.oneOf
+			.filter((entry) => isEnumValue(entry.const))
+			.map((entry) => ({
+				name: entry.title ?? labels[String(entry.const)] ?? String(entry.const),
+				value: entry.const as EnumValue,
+			}));
+		return options.length > 0 ? options : undefined;
+	}
+	const values = source.enum;
 	if (!values || values.length === 0) return undefined;
-	return values.map((value) => ({ name: String(value), value: value as string | number | boolean }));
+	return values.map((value) => ({ name: labels[String(value)] ?? String(value), value }));
 }
 
 function toDefaultValue(value: unknown): string | number | boolean | null | undefined {
@@ -57,6 +78,8 @@ function toDefaultValue(value: unknown): string | number | boolean | null | unde
 }
 
 function sortOrder(property: JsonSchemaProperty): number {
+	const explicit = property['x-lumen-order'];
+	if (typeof explicit === 'number' && Number.isFinite(explicit)) return explicit;
 	const match = /sortOrder:\s*(-?\d+)/.exec(property.description ?? '');
 	return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 }
