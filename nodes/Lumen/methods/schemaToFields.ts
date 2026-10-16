@@ -64,7 +64,7 @@ function toOptions(property: JsonSchemaProperty): INodePropertyOptions[] | undef
 			}));
 		return options.length > 0 ? options : undefined;
 	}
-	const values = source.enum;
+	const values = source.enum?.filter((value) => value !== '');
 	if (!values || values.length === 0) return undefined;
 	return values.map((value) => ({ name: labels[String(value)] ?? String(value), value }));
 }
