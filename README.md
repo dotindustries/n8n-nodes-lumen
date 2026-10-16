@@ -61,7 +61,7 @@ Every credential is tested with `GET {Base URL}/me`, which returns the authentic
 
 ### Lumen API (API key)
 
-1. In Lumen, open **Settings > Developers** and create an API key. Keys start with `lum-`. Copy the key, it is only shown once.
+1. In Lumen, open **Settings > API** and create an API key. Keys start with `lum-`. Copy the key, it is only shown once.
 2. In n8n, create a **Lumen API** credential and paste the key into **API Key**.
 3. Leave **Base URL** at the default unless you use staging or a self-hosted Lumen.
 4. **Organization ID** is optional. Set it when the key owner is a member of several organizations and you want to pin the organization. It is sent as the `x-lumen-org-id` header.

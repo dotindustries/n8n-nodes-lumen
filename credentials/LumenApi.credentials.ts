@@ -1,8 +1,10 @@
 import type {
-	IAuthenticateGeneric,
+	IAuthenticate,
+	ICredentialDataDecryptedObject,
 	ICredentialTestRequest,
 	ICredentialType,
 	Icon,
+	IHttpRequestOptions,
 	INodeProperties,
 } from 'n8n-workflow';
 
@@ -29,7 +31,7 @@ export class LumenApi implements ICredentialType {
 			default: '',
 			placeholder: 'lum-...',
 			description:
-				'Personal API key created in Lumen under Settings > Developers. Keys start with "lum-".',
+				'Personal API key created in Lumen under Settings > API. Keys start with "lum-".',
 		},
 		{
 			displayName: 'Base URL',
@@ -50,14 +52,21 @@ export class LumenApi implements ICredentialType {
 		},
 	];
 
-	authenticate: IAuthenticateGeneric = {
-		type: 'generic',
-		properties: {
-			headers: {
-				Authorization: '=Bearer {{$credentials.apiKey}}',
-				'x-lumen-org-id': '={{$credentials.organizationId || undefined}}',
-			},
-		},
+	authenticate: IAuthenticate = async (
+		credentials: ICredentialDataDecryptedObject,
+		requestOptions: IHttpRequestOptions,
+	): Promise<IHttpRequestOptions> => {
+		const headers: Record<string, string> = {
+			Authorization: `Bearer ${String(credentials.apiKey)}`,
+		};
+		const organizationId = String(credentials.organizationId ?? '').trim();
+		if (organizationId) {
+			headers['x-lumen-org-id'] = organizationId;
+		}
+		return {
+			...requestOptions,
+			headers: { ...requestOptions.headers, ...headers },
+		};
 	};
 
 	test: ICredentialTestRequest = {
