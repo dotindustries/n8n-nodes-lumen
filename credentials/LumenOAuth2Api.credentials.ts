@@ -5,8 +5,6 @@ import type {
 	INodeProperties,
 } from 'n8n-workflow';
 
-const authHost = '{{$self["baseUrl"].replace(/\\/+$/, "").replace(/\\/v\\d+$/, "")}}';
-
 export class LumenOAuth2Api implements ICredentialType {
 	name = 'lumenOAuth2Api';
 
@@ -30,7 +28,16 @@ export class LumenOAuth2Api implements ICredentialType {
 			required: true,
 			default: 'https://api.lumen.run/v1',
 			description:
-				'Lumen public API base URL. Use https://api-qa.lumen.run/v1 for the Lumen staging environment. The OAuth endpoints are derived from this URL.',
+				'Lumen public API base URL. Use https://api-qa.lumen.run/v1 for the Lumen staging environment.',
+		},
+		{
+			displayName: 'Auth Base URL',
+			name: 'authBaseUrl',
+			type: 'string',
+			required: true,
+			default: 'https://app.lumen.run/api/auth',
+			description:
+				'Base URL of the Lumen OAuth2 authorization server (the issuer). Use https://app-qa.lumen.run/api/auth for the Lumen staging environment.',
 		},
 		{
 			displayName: 'Grant Type',
@@ -42,13 +49,13 @@ export class LumenOAuth2Api implements ICredentialType {
 			displayName: 'Authorization URL',
 			name: 'authUrl',
 			type: 'hidden',
-			default: `=${authHost}/api/auth/oauth2/authorize`,
+			default: '={{$self["authBaseUrl"].replace(/\\/+$/, "")}}/oauth2/authorize',
 		},
 		{
 			displayName: 'Access Token URL',
 			name: 'accessTokenUrl',
 			type: 'hidden',
-			default: `=${authHost}/api/auth/oauth2/token`,
+			default: '={{$self["authBaseUrl"].replace(/\\/+$/, "")}}/oauth2/token',
 		},
 		{
 			displayName: 'Scope',

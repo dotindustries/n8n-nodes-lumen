@@ -74,17 +74,20 @@ OAuth2 lets each n8n user connect their own Lumen account without sharing API ke
 
 1. In n8n, start creating a **Lumen OAuth2 API** credential and copy the **OAuth Redirect URL** that n8n displays. It has the form `https://<your-n8n-host>/rest/oauth2-credential/callback`.
 2. In Lumen, open **Settings > Developers**, create an **OAuth application** and add that redirect URL to the application's redirect URIs. Lumen shows a **Client ID** and a **Client Secret**. Copy the secret, it is only shown once.
-3. Back in n8n, paste the Client ID and Client Secret into the credential, adjust **Base URL** if you use staging, and select **Connect my account**. Sign in to Lumen and approve the requested scopes.
+3. Back in n8n, paste the Client ID and Client Secret into the credential. If you use staging, set **Base URL** to `https://api-qa.lumen.run/v1` and **Auth Base URL** to `https://app-qa.lumen.run/api/auth`. Select **Connect my account**, sign in to Lumen and approve the requested scopes.
 
 The credential requests the scopes `openid offline_access read write`. `offline_access` lets n8n refresh the access token without asking you to sign in again.
 
-OAuth endpoints are derived from the Base URL by stripping the `/v1` suffix:
+Lumen's authorization server is the Lumen app host. The **Auth Base URL** is its issuer; the OAuth endpoints are derived from it:
 
-| Endpoint | URL |
-|---|---|
-| Authorization | `https://api.lumen.run/api/auth/oauth2/authorize` |
-| Token | `https://api.lumen.run/api/auth/oauth2/token` |
-| Discovery | `https://api.lumen.run/api/auth/.well-known/openid-configuration` |
+| Endpoint | Production | Staging |
+|---|---|---|
+| Issuer (Auth Base URL) | `https://app.lumen.run/api/auth` | `https://app-qa.lumen.run/api/auth` |
+| Authorization | `{issuer}/oauth2/authorize` | same |
+| Token | `{issuer}/oauth2/token` | same |
+| Discovery | `{issuer}/.well-known/openid-configuration` | same |
+
+The same endpoints are also mounted on the API host (`https://api.lumen.run/api/auth/...`), but the discovery document names the app host as the issuer, so the credential uses that.
 
 PKCE (`S256`) is always used. Client credentials are sent in the token request body (`client_secret_post`). Lumen also accepts `client_secret_basic`.
 
@@ -123,7 +126,7 @@ The workflow needs an `NPM_TOKEN` repository secret: an npm **granular access to
 
 - The npm package name `n8n-nodes-lumen` and the npm owner are placeholders. n8n verification requires that the npm author matches the GitHub repository owner. Change `name`, `author` and the scanner's package name in `.github/workflows/release.yml` if the final name differs.
 - The `x-lumen-org-id` header for API keys follows the draft public API contract; confirm against the released Lumen public API.
-- OAuth endpoints are served by the Lumen public API host. Confirm the authorization server host for staging and production before publishing.
+- The OAuth flow has not yet been exercised end to end from n8n against a Lumen OAuth application (no test client was available). The endpoint URLs were verified against Lumen's OpenID discovery documents.
 
 ## Resources
 
