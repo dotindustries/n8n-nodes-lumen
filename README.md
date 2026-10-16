@@ -1,10 +1,10 @@
 # n8n-nodes-lumen
 
-This is an [n8n](https://n8n.io/) community node package for [Lumen](https://lumen.run). Lumen is the process platform for human-in-the-loop workflows: teams model processes as templates, start requests from them, and complete steps with approvals, forms and automations. This package lets you create and look up Lumen requests, browse process templates and (soon) react to request and step events from inside your n8n workflows.
+This is an [n8n](https://n8n.io/) community node package for [Lumen](https://lumen.run). Lumen is the process platform for human-in-the-loop workflows: teams model processes as templates, start requests from them, and complete steps with approvals, forms and automations. This package lets you create and look up Lumen requests, browse process templates and react to request and step events from inside your n8n workflows.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
 
-> Status: pre-release. The package is not yet published to npm and the final npm package name and owner are still to be decided (see [Open points](#open-points)). A Lumen Trigger node for request and step events is being added.
+> Status: pre-release. The package is not yet published to npm and the final npm package name and owner are still to be decided (see [Open points](#open-points)).
 
 - [Installation](#installation)
 - [Operations](#operations)
@@ -54,9 +54,25 @@ Only [verified community nodes](https://docs.n8n.io/integrations/community-nodes
 | Process Template | Get Form Schema | Return the JSON Schema of the form needed to create a request, optionally for a specific version or step. `GET /process/{id}/schema`. |
 | Identity | Get Current Actor | Return the user or app the credential authenticates as. `GET /me`. |
 
-Planned: a Lumen Trigger node for request and step webhook events.
-
 The node is marked as usable as a tool, so it can also be attached to an n8n AI Agent.
+
+### Lumen Trigger
+
+The **Lumen Trigger** node starts a workflow when Lumen delivers a request or step event. On activation it registers a webhook endpoint in Lumen for the production webhook URL (`POST /webhooks`), stores the endpoint ID and signing secret in the workflow's static data, and removes the endpoint again on deactivation (`DELETE /webhooks/{id}`). On every later activation the node checks the stored endpoint (`GET /webhooks/{id}`) and re-creates it when it was removed in Lumen or when its URL or event list no longer matches.
+
+| Parameter | Description |
+|---|---|
+| Authentication | API Key or OAuth2, same credentials as the `Lumen` node. The credential needs the `write` scope (OAuth2) and the `webhook_config` permission on the organization. |
+| Events | One or more event types. The list is loaded from `GET /webhooks/event-types`; the built-in list is used when the API is not reachable. |
+| Process Template ID | Optional `prc_...` ID. Deliveries for requests created from other templates are acknowledged with 200 but do not start an execution. |
+
+Event types: `request.created`, `request.status_changed`, `request.completed`, `request.rejected`, `request.cancelled`, `step.assigned`, `step.completed`.
+
+Every delivery is verified with the standard [Svix signature](https://docs.svix.com/receiving/verifying-payloads/how-manual) (`svix-id`, `svix-timestamp`, `svix-signature` headers, HMAC-SHA256 over `id.timestamp.body` with the endpoint secret, constant-time comparison, 5 minute timestamp tolerance). Deliveries with a missing or invalid signature are rejected with `401` and do not start an execution. Lumen retries failed deliveries.
+
+The node outputs one item per delivery with the event payload: `type`, `id` (deterministic, usable for deduplication), `occurredAt`, `orgId` and `data.request` (`id`, `displayName`, `processId`, `processVersion`, `status`, `currentTaskIDs`, `createdAt`, `updatedAt`); `step.*` events add `data.step` (`id`, `name`, `assignees`) and status events add `data.previousStatus`.
+
+Lumen only accepts `https://` webhook URLs that are reachable from the internet (no `localhost`, private networks or `.local`/`.internal` hosts), so `WEBHOOK_URL` of your n8n instance must point to a public HTTPS address.
 
 ### Creating a request
 
@@ -154,3 +170,4 @@ The workflow needs an `NPM_TOKEN` repository secret: an npm **granular access to
 
 - Package scaffold with `Lumen API` (API key) and `Lumen OAuth2 API` credentials.
 - `Lumen` node: Request (Create, Get, Get Many), Process Template (Get Many, Get Form Schema), Identity (Get Current Actor).
+- `Lumen Trigger` node: request and step webhook events with Svix signature verification and optional process template filter.
