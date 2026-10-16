@@ -1,0 +1,62 @@
+{
+	"name": "n8n-nodes-lumen",
+	"version": "0.1.0",
+	"description": "n8n community nodes for Lumen (lumen.run): create and monitor requests, browse process templates",
+	"license": "MIT",
+	"homepage": "https://github.com/dotindustries/n8n-nodes-lumen",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"lumen",
+		"lumen.run",
+		"workflow",
+		"process"
+	],
+	"author": {
+		"name": "dot industries",
+		"email": "hello@lumen.run"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dotindustries/n8n-nodes-lumen.git"
+	},
+	"bugs": {
+		"url": "https://github.com/dotindustries/n8n-nodes-lumen/issues"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/LumenApi.credentials.js",
+			"dist/credentials/LumenOAuth2Api.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Lumen/Lumen.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.52.5",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"release-it": "^21.1.0",
+		"typescript": "5.9.2"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}
