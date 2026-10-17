@@ -1,11 +1,17 @@
 import type {
 	IDataObject,
 	IExecuteSingleFunctions,
+	IHookFunctions,
 	IHttpRequestMethods,
 	ILoadOptionsFunctions,
+	IWebhookFunctions,
 } from 'n8n-workflow';
 
-type LumenContext = ILoadOptionsFunctions | IExecuteSingleFunctions;
+type LumenContext =
+	| ILoadOptionsFunctions
+	| IExecuteSingleFunctions
+	| IHookFunctions
+	| IWebhookFunctions;
 
 export function getCredentialTypeName(this: LumenContext): string {
 	const authentication = this.getNodeParameter('authentication', 'apiKey') as string;

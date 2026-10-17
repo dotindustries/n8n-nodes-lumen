@@ -46,7 +46,8 @@
 			"dist/credentials/LumenOAuth2Api.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/Lumen/Lumen.node.js"
+			"dist/nodes/Lumen/Lumen.node.js",
+			"dist/nodes/LumenTrigger/LumenTrigger.node.js"
 		]
 	},
 	"devDependencies": {
