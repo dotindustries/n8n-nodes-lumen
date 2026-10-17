@@ -7,6 +7,11 @@ import type {
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { processTemplateLocator } from '../shared';
+import {
+	formatAllowedValues,
+	stripMultiValueSuffix,
+	type LumenMapperField,
+} from '../../methods/schemaToFields';
 
 const showOnlyForRequestCreate = {
 	resource: ['request'],
@@ -40,6 +45,15 @@ export async function buildCreateRequestBody(
 	for (const key of Object.keys(data)) {
 		if (data[key] === undefined || data[key] === null) delete data[key];
 	}
+	for (const field of (fields.schema ?? []) as LumenMapperField[]) {
+		if (!field.lumenMultiValue || !(field.id in data)) continue;
+		const values = normalizeMultiValue.call(this, field, data[field.id]);
+		if (values.length === 0) {
+			delete data[field.id];
+			continue;
+		}
+		data[field.id] = field.lumenMultiValue === 'array' ? values : values.join(',');
+	}
 
 	const body: IDataObject = {
 		process: {
@@ -62,6 +76,39 @@ export async function buildCreateRequestBody(
 	}
 
 	return { ...requestOptions, body };
+}
+
+function normalizeMultiValue(
+	this: IExecuteSingleFunctions,
+	field: LumenMapperField,
+	raw: unknown,
+): string[] {
+	const label = stripMultiValueSuffix(field.displayName);
+	const options = field.options ?? [];
+	const allowed = new Set(options.map((option) => String(option.value)));
+	let values: string[];
+	if (Array.isArray(raw)) {
+		values = raw.map((value) => String(value).trim());
+	} else if (typeof raw === 'string') {
+		values = raw.split(',').map((value) => value.trim());
+	} else if (raw === undefined || raw === null) {
+		values = [];
+	} else {
+		throw new NodeOperationError(
+			this.getNode(),
+			`Field "${label}" must be a comma-separated string or an array of values. Allowed values: ${formatAllowedValues(options)}`,
+		);
+	}
+	values = [...new Set(values.filter((value) => value !== ''))];
+	const invalid = values.filter((value) => !allowed.has(value));
+	if (invalid.length > 0) {
+		const list = invalid.map((value) => `"${value}"`).join(', ');
+		throw new NodeOperationError(
+			this.getNode(),
+			`Field "${label}" does not allow ${list}. Allowed values: ${formatAllowedValues(options)}`,
+		);
+	}
+	return values;
 }
 
 export const requestCreateDescription: INodeProperties[] = [

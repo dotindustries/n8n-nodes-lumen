@@ -50,6 +50,7 @@ Only [verified community nodes](https://docs.n8n.io/integrations/community-nodes
 | Request | Create | Start a new request from a process template. Pick the template from a searchable list (or enter its `prc_...` ID); the node then loads the template's form schema and shows its fields in a mapper with types, required markers and dropdowns for choice fields. Optional template version and JSON metadata. `POST /request`. |
 | Request | Get | Get one request by ID (`req_...`) or display code (for example `BREP-42`). `GET /request/{id}`. |
 | Request | Get Many | List requests, most recently updated first. Filters: status (multi-select), process template ID, created after, updated after. Return All follows the API cursor; otherwise up to Limit (max 100). `GET /request`. |
+| Process Template | Get | Get one process template by ID (`prc_...`) or from the searchable list. `GET /process/{id}`. |
 | Process Template | Get Many | List process templates, optionally filtered by a search text. Return All or Limit. `GET /process`. |
 | Process Template | Get Form Schema | Return the JSON Schema of the form needed to create a request, optionally for a specific version or step. `GET /process/{id}/schema`. |
 | Identity | Get Current Actor | Return the user or app the credential authenticates as. `GET /me`. |
@@ -80,6 +81,8 @@ Lumen only accepts `https://` webhook URLs that are reachable from the internet 
 2. Choose the **Process Template** from the list. The **Form Fields** mapper loads the template's first-step form: required fields are marked, choice fields become dropdowns, booleans toggles and numbers numeric inputs.
 3. Fill the fields, or switch the mapper to **Map Automatically** to take values from the incoming item using the field IDs (`prsc_...`) as keys.
 4. The node returns `requestId`, `displayName` (the display code) and `workflowId`.
+
+Choice fields: single-choice components (select, dropdown) become dropdowns with the option labels from the schema. Multi-value components (checkbox groups, multi-select dropdowns) have no multi-select widget in the mapper, so they are shown as a text field labelled with the allowed values, for example `Regions (any of: eu, us, apac)`. Enter the values comma-separated (`eu, us`) or map an array through an expression; the node validates every value against the allowed set and fails with a message listing the allowed values otherwise. Checkbox groups are sent as an array, multi-select dropdowns as the comma-joined string Lumen stores.
 
 Field IDs in the mapper are Lumen step component IDs. Use **Process Template > Get Form Schema** to inspect them, including the component kind and hints in each property's description.
 
@@ -169,5 +172,5 @@ The workflow needs an `NPM_TOKEN` repository secret: an npm **granular access to
 ### Unreleased
 
 - Package scaffold with `Lumen API` (API key) and `Lumen OAuth2 API` credentials.
-- `Lumen` node: Request (Create, Get, Get Many), Process Template (Get Many, Get Form Schema), Identity (Get Current Actor).
+- `Lumen` node: Request (Create, Get, Get Many), Process Template (Get, Get Many, Get Form Schema), Identity (Get Current Actor).
 - `Lumen Trigger` node: request and step webhook events with Svix signature verification and optional process template filter.
