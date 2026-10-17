@@ -1,4 +1,8 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
+import { getProcessTemplateFields, processTemplateSearch } from './methods';
+import { identityDescription } from './resources/identity';
+import { processTemplateDescription } from './resources/processTemplate';
+import { requestDescription } from './resources/request';
 
 export class Lumen implements INodeType {
 	description: INodeTypeDescription = {
@@ -8,7 +12,7 @@ export class Lumen implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Interact with the Lumen API',
+		description: 'Create and look up Lumen requests and process templates',
 		defaults: {
 			name: 'Lumen',
 		},
@@ -70,35 +74,29 @@ export class Lumen implements INodeType {
 						name: 'Identity',
 						value: 'identity',
 					},
-				],
-				default: 'identity',
-			},
-			{
-				displayName: 'Operation',
-				name: 'operation',
-				type: 'options',
-				noDataExpression: true,
-				displayOptions: {
-					show: {
-						resource: ['identity'],
-					},
-				},
-				options: [
 					{
-						name: 'Get Current Actor',
-						value: 'getMe',
-						action: 'Get the current actor',
-						description: 'Return the user or app the credential authenticates as',
-						routing: {
-							request: {
-								method: 'GET',
-								url: '/me',
-							},
-						},
+						name: 'Process Template',
+						value: 'processTemplate',
+					},
+					{
+						name: 'Request',
+						value: 'request',
 					},
 				],
-				default: 'getMe',
+				default: 'request',
 			},
+			...requestDescription,
+			...processTemplateDescription,
+			...identityDescription,
 		],
+	};
+
+	methods = {
+		listSearch: {
+			processTemplateSearch,
+		},
+		resourceMapping: {
+			getProcessTemplateFields,
+		},
 	};
 }

@@ -4,7 +4,7 @@ This is an [n8n](https://n8n.io/) community node package for [Lumen](https://lum
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
 
-> Status: pre-release. The package is not yet published to npm and the final npm package name and owner are still to be decided (see [Open points](#open-points)). The current `Lumen` node only exposes a `Get Current Actor` operation; the request and process template operations and the trigger node are being added.
+> Status: pre-release. The package is not yet published to npm and the final npm package name and owner are still to be decided (see [Open points](#open-points)). A Lumen Trigger node for request and step events is being added.
 
 - [Installation](#installation)
 - [Operations](#operations)
@@ -47,11 +47,25 @@ Only [verified community nodes](https://docs.n8n.io/integrations/community-nodes
 
 | Resource | Operation | Description |
 |---|---|---|
-| Identity | Get Current Actor | Returns the user or app the credential authenticates as (`GET /me`). Useful to verify a credential inside a workflow. |
+| Request | Create | Start a new request from a process template. Pick the template from a searchable list (or enter its `prc_...` ID); the node then loads the template's form schema and shows its fields in a mapper with types, required markers and dropdowns for choice fields. Optional template version and JSON metadata. `POST /request`. |
+| Request | Get | Get one request by ID (`req_...`) or display code (for example `BREP-42`). `GET /request/{id}`. |
+| Request | Get Many | List requests, most recently updated first. Filters: status (multi-select), process template ID, created after, updated after. Return All follows the API cursor; otherwise up to Limit (max 100). `GET /request`. |
+| Process Template | Get Many | List process templates, optionally filtered by a search text. Return All or Limit. `GET /process`. |
+| Process Template | Get Form Schema | Return the JSON Schema of the form needed to create a request, optionally for a specific version or step. `GET /process/{id}/schema`. |
+| Identity | Get Current Actor | Return the user or app the credential authenticates as. `GET /me`. |
 
-Planned: Request (create from a process template with a mapped form, get, get many with filters), Process Template (get, get many) and a Lumen Trigger node for request and step webhook events.
+Planned: a Lumen Trigger node for request and step webhook events.
 
 The node is marked as usable as a tool, so it can also be attached to an n8n AI Agent.
+
+### Creating a request
+
+1. Add a **Lumen** node, choose **Request > Create** and select a credential.
+2. Choose the **Process Template** from the list. The **Form Fields** mapper loads the template's first-step form: required fields are marked, choice fields become dropdowns, booleans toggles and numbers numeric inputs.
+3. Fill the fields, or switch the mapper to **Map Automatically** to take values from the incoming item using the field IDs (`prsc_...`) as keys.
+4. The node returns `requestId`, `displayName` (the display code) and `workflowId`.
+
+Field IDs in the mapper are Lumen step component IDs. Use **Process Template > Get Form Schema** to inspect them, including the component kind and hints in each property's description.
 
 ## Credentials
 
@@ -139,4 +153,4 @@ The workflow needs an `NPM_TOKEN` repository secret: an npm **granular access to
 ### Unreleased
 
 - Package scaffold with `Lumen API` (API key) and `Lumen OAuth2 API` credentials.
-- `Lumen` node with the `Identity > Get Current Actor` operation.
+- `Lumen` node: Request (Create, Get, Get Many), Process Template (Get Many, Get Form Schema), Identity (Get Current Actor).
