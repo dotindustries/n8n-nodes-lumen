@@ -15,6 +15,11 @@ const showOnlyForProcessTemplateGetSchema = {
 	operation: ['getSchema'],
 };
 
+const showOnlyForProcessTemplateGetOrGetSchema = {
+	resource: ['processTemplate'],
+	operation: ['get', 'getSchema'],
+};
+
 export const processTemplateDescription: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -25,6 +30,18 @@ export const processTemplateDescription: INodeProperties[] = [
 			show: showOnlyForProcessTemplates,
 		},
 		options: [
+			{
+				name: 'Get',
+				value: 'get',
+				action: 'Get a process template',
+				description: 'Get one process template by ID',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/process/{{ encodeURIComponent($parameter["processTemplate"]) }}',
+					},
+				},
+			},
 			{
 				name: 'Get Form Schema',
 				value: 'getSchema',
@@ -56,7 +73,7 @@ export const processTemplateDescription: INodeProperties[] = [
 		],
 		default: 'getAll',
 	},
-	processTemplateLocator({ displayOptions: { show: showOnlyForProcessTemplateGetSchema } }),
+	processTemplateLocator({ displayOptions: { show: showOnlyForProcessTemplateGetOrGetSchema } }),
 	{
 		displayName: 'Options',
 		name: 'options',
